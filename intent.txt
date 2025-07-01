@@ -1,0 +1,30 @@
+# md2zim - Create a Zim note from Markdown content in Clipboard
+#
+# For working when invoked from git-bash in Windows 11
+# Depends on: 
+#   git-bash being present
+#
+# Pandoc being installed and present in the PATH - if not present, it should guide the user 
+#    for installing it on Windows 11
+#
+# Reads in the markdown content from the clipboard:
+#    can use /dev/clipboard on Windows to read in the clipboard contents into a variable
+
+#
+# For determining the filename of the zimwiki note:
+#    Optionally takes in a string as a title of a note from the command line argument
+#    if not present, uses the first level 1 heading from the markdown content - the first 
+#    line that starts with a single hash '#' and generates the name of the output file
+#    from it, appending a '.txt' extension, since zimwiki stores its notes as .txt files. 
+
+# Optionally takes the path of the data directory of Zim on the command line. 
+#     If not given or set in the environment - allow the user to configure it
+#     Perhaps save it in the environment in git bash on the first run? 
+
+# Uses the following command for converting markdown to zimwiki format: 
+#    pandoc --from markdown --to zimwiki --output $outfile "$filename"
+#    where outfile is a temporary file name
+
+# Then uses sed - which is usually present in git-bash on Windows to insert the Content-type
+#   header and the Creation date to the Zim note in the temporary file
+#   sed -i "1 i\Content-Type:\ text/x-zim-wiki\nWiki-Format:\ zim\ 0.6\nCreation-Date:\ $(date --iso-8601=minutes)\n" $outfile
