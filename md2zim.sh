@@ -97,13 +97,21 @@ title_arg="${1:-}"
 
 if [[ -n "$title_arg" ]]; then
   title="$title_arg"
+  # If no level 1 heading, prepend one with the title
+  if ! echo "$markdown_content" | grep -q '^# '; then
+    markdown_content="# $title"$'\n'"$markdown_content"
+  fi
 else
-  # Extract first H1 heading from clipboard content
+  # Try to extract first H1 heading from clipboard content
   title=$(get_first_h1_heading "$markdown_content")
   if [[ -z "$title" ]]; then
-    echo "No title argument provided and no level 1 heading found in clipboard."
-    echo "Please provide a title as the first argument."
-    exit 1
+    # Prompt user for title, then prepend it as H1 heading
+    read -rp "No level 1 heading found. Please enter a title for the note: " title
+    if [[ -z "$title" ]]; then
+      echo "No title entered. Aborting."
+      exit 1
+    fi
+    markdown_content="# $title"$'\n'"$markdown_content"
   fi
 fi
 
