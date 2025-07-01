@@ -21,6 +21,14 @@
 #
 
 set -euo pipefail
+trap 'echo "An unexpected error occurred at line $LINENO: $BASH_COMMAND" >&2' ERR
+
+# Check if running in Git Bash on Windows
+if [[ ! -e /dev/clipboard ]]; then
+  echo "Error: This script is intended to run in Git Bash on Windows."
+  echo "Please run it in Git Bash or ensure /dev/clipboard is available."
+  exit 1
+fi
 
 # --- Functions ---
 
@@ -66,7 +74,8 @@ function prompt_zim_dir {
   read -rp "Please enter the full path to your Zim data directory (e.g. /c/Users/YourName/Zim): " input_dir
   input_dir="${input_dir/#\~/$HOME}"  # expand ~ if entered
   if [[ ! -d "$input_dir" ]]; then
-    echo "Directory does not exist: $input_dir"
+    echo "Directory does not exist: $input_dir" >&2
+    echo "Please create the directory or specify an existing one."
     exit 1
   fi
 
