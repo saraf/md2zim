@@ -79,7 +79,8 @@ MIT License
 
 ## Credits
 
-- Inspired by workflows for Zim Wiki and Markdown interoperability.
+- Inspired by workflows for Zim Wiki and Markdown interoperability. 
+- https://github.com/zim-desktop-wiki/zim-desktop-wiki/issues/1879#issuecomment-1248290424
 - Uses [pandoc](https://pandoc.org/) for format conversion.
 
 ## Contributing
