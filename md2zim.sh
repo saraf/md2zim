@@ -101,6 +101,28 @@ is_first_line_h1() {
   [[ "$first_line" =~ ^#\  ]]
 }
 
+# Function to add blank lines before each reference link
+add_blank_lines_before_numeric_refs_at_end() {
+  awk '
+    BEGIN { ref_start = 0 }
+    /^[[]([0-9]+)[]][[:space:]]/ { lines[NR] = 1; last_ref = NR }
+    { text[NR] = $0 }
+    END {
+      # Find the start of the last contiguous block of numeric refs at end
+      ref_block_start = 0
+      for (i = last_ref; i >= 1; i--) {
+        if (lines[i]) ref_block_start = i
+        else break
+      }
+      for (i = 1; i <= NR; i++) {
+        if (i == ref_block_start && ref_block_start > 1) print ""
+        if (i >= ref_block_start && i <= last_ref && lines[i] && i != ref_block_start) print ""
+        print text[i]
+      }
+    }
+  '
+}
+
 # --- Main script ---
 
 check_pandoc
@@ -136,6 +158,9 @@ else
     markdown_content="# $title"$'\n'"$markdown_content"
   fi
 fi
+
+# Preprocess: Ensure blank lines before each reference link
+markdown_content=$(echo "$markdown_content" | add_blank_lines_before_numeric_refs_at_end)
 
 # Sanitize filename and append .txt
 filename="$(sanitize_filename "$title").txt"
