@@ -123,6 +123,42 @@ add_blank_lines_before_numeric_refs_at_end() {
   '
 }
 
+# Add 'Created on' timestamp after the title
+# Ensures your Zim notes always have a single, correctly placed timestamp 
+# just below the title, regardless of extra blank lines or repeated script runs
+add_created_on_after_title() {
+  local content="$1"
+  local created_on="Created on $(date '+%Y-%m-%d %H:%M')"
+  local first_line rest
+
+  # Extract the first non-blank line
+  first_line="$(echo "$content" | sed -n '/^.*[^[:space:]].*$/ {p;q}')"
+
+  # If it's a level 1 heading
+  if [[ "$first_line" =~ ^#[[:space:]]+.* ]]; then
+    # Remove the first non-blank line and get the rest
+    rest="$(echo "$content" | sed '0,/^.*[^[:space:]].*$/d')"
+    # Check if the next non-blank line is already a Created on line
+    local next_line
+    next_line="$(echo "$rest" | sed -n '/^.*[^[:space:]].*$/ {p;q}')"
+    if [[ "$next_line" =~ ^Created\ on ]]; then
+      # Already has a Created on line, return as-is
+      echo "$content"
+    else
+      # Insert Created on after heading and before the rest
+      {
+        echo "$first_line"
+        echo "$created_on"
+        echo "$rest"
+      }
+    fi
+  else
+    # No level 1 heading, return as-is
+    echo "$content"
+  fi
+}
+
+
 # --- Main script ---
 
 check_pandoc
@@ -158,6 +194,9 @@ else
     markdown_content="# $title"$'\n'"$markdown_content"
   fi
 fi
+
+# Add 'Created on' timestamp after the title
+markdown_content=$(add_created_on_after_title "$markdown_content")
 
 # Preprocess: Ensure blank lines before each reference link
 markdown_content=$(echo "$markdown_content" | add_blank_lines_before_numeric_refs_at_end)
