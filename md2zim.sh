@@ -60,13 +60,18 @@ function sanitize_filename {
   echo "$filename"
 }
 
-function get_first_h1_heading {
-  # Extract first line starting with exactly one '#' followed by a space
-  # from the markdown content
+function get_first_line_h1_heading {
   local content="$1"
-  local heading
-  heading=$(echo "$content" | grep -m1 '^# ' | sed 's/^# //')
-  echo "$heading"
+  # Extract the first line
+  local first_line
+  first_line="$(echo "$content" | head -n 1)"
+  # Check if it starts with '# ' (Level 1 heading)
+  if [[ "$first_line" =~ ^#\ (.*) ]]; then
+    # Return the heading text (without '# ')
+    echo "${BASH_REMATCH[1]}"
+  else
+    echo ""
+  fi
 }
 
 function prompt_zim_dir {
@@ -89,6 +94,13 @@ function prompt_zim_dir {
   echo "$input_dir"
 }
 
+# Function to check if first line is a level 1 heading
+is_first_line_h1() {
+  local first_line
+  first_line="$(echo "$1" | head -n 1)"
+  [[ "$first_line" =~ ^#\  ]]
+}
+
 # --- Main script ---
 
 check_pandoc
@@ -97,7 +109,8 @@ check_pandoc
 markdown_content=$(read_clipboard)
 
 if [[ -z "$markdown_content" ]]; then
-  echo "Clipboard is empty or does not contain Markdown content."
+  echo "Clipboard is empty or does not contain Markdown content." >&2
+  echo "Please copy some Markdown content to the clipboard and try again." 1>&2  
   exit 1
 fi
 
@@ -107,12 +120,12 @@ title_arg="${1:-}"
 if [[ -n "$title_arg" ]]; then
   title="$title_arg"
   # If no level 1 heading, prepend one with the title
-  if ! echo "$markdown_content" | grep -q '^# '; then
+  if ! is_first_line_h1 "$markdown_content"; then
     markdown_content="# $title"$'\n'"$markdown_content"
   fi
 else
-  # Try to extract first H1 heading from clipboard content
-  title=$(get_first_h1_heading "$markdown_content")
+  # Try to extract first line H1 heading from clipboard content
+  title=$(get_first_line_h1_heading "$markdown_content")
   if [[ -z "$title" ]]; then
     # Prompt user for title, then prepend it as H1 heading
     read -rp "No level 1 heading found. Please enter a title for the note: " title
